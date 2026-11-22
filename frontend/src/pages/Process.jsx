@@ -14,7 +14,7 @@ export default function Process() {
 
   async function load() {
     const all = await api.挂牌列表();
-    setRows(all.filter((r) => !["已取", "超期隔离", "丢失隔离"].includes(r.status)));
+    setRows(all.filter((r) => !["已取", "超期隔离", "丢失隔离", "已作废"].includes(r.status)));
   }
 
   useEffect(() => {

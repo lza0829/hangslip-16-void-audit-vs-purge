@@ -39,6 +39,12 @@ export const api = {
       method: "POST",
       body: JSON.stringify(body),
     }),
+  作废: (no, body) =>
+    req(`/挂牌/${encodeURIComponent(no)}/作废`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  废票流水: () => req("/废票"),
   隔离列表: () => req("/隔离"),
   日闸今日: () => req("/日闸/今日"),
   日闸列表: () => req("/日闸"),

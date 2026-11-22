@@ -56,6 +56,14 @@ CREATE TABLE IF NOT EXISTS quarantines (
   created_at TEXT NOT NULL,
   resolved INTEGER NOT NULL DEFAULT 0
 );
+CREATE TABLE IF NOT EXISTS voids (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  ticket_no TEXT NOT NULL UNIQUE,
+  prev_status TEXT NOT NULL,
+  reason TEXT NOT NULL,
+  operator TEXT NOT NULL,
+  voided_at TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS day_gates (
   day TEXT PRIMARY KEY,
   sealed INTEGER NOT NULL DEFAULT 0,
@@ -73,7 +81,10 @@ CREATE TABLE IF NOT EXISTS watermarks (
 );
 """
 
-STATUSES = ("已收", "水洗", "烘干", "熨烫", "待取", "已取", "超期隔离", "丢失隔离")
+STATUSES = ("已收", "水洗", "烘干", "熨烫", "待取", "已取", "超期隔离", "丢失隔离", "已作废")
+# 在途水位口径：以下终态不计入在途。已作废按「废票留档」架构出途——票籍留档可回看，但水位跟票籍结局走。
+IN_FLIGHT_EXCLUDED = ("已取", "丢失隔离", "已作废")
+IN_FLIGHT_NOT_IN = ",".join(f"'{s}'" for s in IN_FLIGHT_EXCLUDED)
 FORWARD = {
     "已收": ("水洗", "烘干", "熨烫", "待取"),
     "水洗": ("烘干", "熨烫", "待取"),

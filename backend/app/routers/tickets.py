@@ -42,6 +42,11 @@ class QuarantineIn(BaseModel):
     operator: str = "店员"
 
 
+class VoidIn(BaseModel):
+    reason: str
+    operator: str = "店员"
+
+
 @router.get("/挂牌")
 def list_tickets(
     status: str | None = Query(None),
@@ -73,3 +78,8 @@ def pickup(ticket_no: str, body: PickupIn):
 @router.post("/挂牌/{ticket_no}/隔离")
 def quarantine(ticket_no: str, body: QuarantineIn):
     return svc.quarantine(ticket_no, body.kind, body.reason, body.operator)
+
+
+@router.post("/挂牌/{ticket_no}/作废")
+def void_ticket(ticket_no: str, body: VoidIn):
+    return svc.void_ticket(ticket_no, body.reason, body.operator)

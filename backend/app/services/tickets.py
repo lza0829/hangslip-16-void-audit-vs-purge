@@ -126,7 +126,7 @@ def advance(ticket_no: str, to_status: str, operator: str = "店员", note: str 
         if not row:
             raise HTTPException(404, "挂牌不存在")
         cur = row["status"]
-        if cur in ("已取", "超期隔离", "丢失隔离"):
+        if cur in ("已取", "超期隔离", "丢失隔离", "已作废"):
             raise HTTPException(409, f"当前态「{cur}」不可推进工序")
         allowed = FORWARD.get(cur, ())
         if to_status not in allowed:
@@ -178,6 +178,52 @@ def pickup(ticket_no: str, pickup_code: str, operator: str = "店员") -> dict:
     return get_ticket(ticket_no)
 
 
+def void_ticket(ticket_no: str, reason: str, operator: str = "店员") -> dict:
+    """废票留档：错贴挂牌进入可审计终态「已作废」。
+
+    同命运边界（单事务）：挂牌表票籍置终态、废票流水留痕、工序事件记录、
+    在途水位出途，四者同生同灭；票籍与衣物件保留，按号仍可回看。
+    与取衣核销争用时由 BEGIN IMMEDIATE 串行化，先到先得，输家 409，
+    不会出现「已取又抹」。
+    """
+    if is_day_sealed():
+        raise HTTPException(409, "今日已结案，禁止废票")
+    reason = (reason or "").strip()
+    if not reason:
+        raise HTTPException(400, "废票原因必填")
+    with transaction() as conn:
+        ensure_day_row(conn)
+        row = conn.execute(
+            "SELECT * FROM hang_tickets WHERE ticket_no=?", (ticket_no,)
+        ).fetchone()
+        if not row:
+            raise HTTPException(404, "挂牌不存在")
+        cur = row["status"]
+        if cur == "已作废":
+            raise HTTPException(409, "该票已作废，勿重复废票")
+        if cur == "已取":
+            raise HTTPException(409, "已取核销的票不可作废")
+        if cur == "丢失隔离":
+            raise HTTPException(409, "丢失隔离的票不可作废，请走丢失认领")
+        now = datetime.now().replace(microsecond=0).isoformat(sep=" ")
+        conn.execute(
+            "UPDATE hang_tickets SET status='已作废' WHERE ticket_no=?",
+            (ticket_no,),
+        )
+        conn.execute(
+            """INSERT INTO voids(ticket_no, prev_status, reason, operator, voided_at)
+               VALUES (?,?,?,?,?)""",
+            (ticket_no, cur, reason, operator or "店员", now),
+        )
+        conn.execute(
+            """INSERT INTO process_events(ticket_no, from_status, to_status, operator, occurred_at, note)
+               VALUES (?,?,?,?,?,?)""",
+            (ticket_no, cur, "已作废", operator or "店员", now, reason),
+        )
+        refresh_in_flight(conn)
+    return get_ticket(ticket_no)
+
+
 def quarantine(ticket_no: str, kind: str, reason: str, operator: str = "店员") -> dict:
     kind = (kind or "").strip()
     if kind not in ("超期隔离", "丢失隔离"):
@@ -188,7 +234,7 @@ def quarantine(ticket_no: str, kind: str, reason: str, operator: str = "店员")
         ).fetchone()
         if not row:
             raise HTTPException(404, "挂牌不存在")
-        if row["status"] in ("已取", "丢失隔离"):
+        if row["status"] in ("已取", "丢失隔离", "已作废"):
             raise HTTPException(409, f"当前态「{row['status']}」不可隔离")
         if kind == "超期隔离" and row["status"] not in ("待取", "超期隔离"):
             raise HTTPException(409, "超期隔离仅从待取进入")

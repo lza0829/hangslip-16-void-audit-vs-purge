@@ -307,6 +307,12 @@ th {
   color: var(--steam);
 }
 
+.badge.已作废 {
+  border-color: rgba(150, 150, 150, 0.45);
+  color: #b5b0a6;
+  text-decoration: line-through;
+}
+
 .msg {
   margin: 8px 0 14px;
   color: #f0c2a0;

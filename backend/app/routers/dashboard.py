@@ -34,6 +34,7 @@ def dashboard():
             "已取": cnt("已取"),
             "超期隔离": cnt("超期隔离"),
             "丢失隔离": cnt("丢失隔离"),
+            "已作废": cnt("已作废"),
         }
     finally:
         conn.close()

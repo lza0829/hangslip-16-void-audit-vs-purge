@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import PROJECT_NAME
-from app.routers import dashboard, gates, quarantine, settings, stores, tickets
+from app.routers import dashboard, gates, quarantine, settings, stores, tickets, voids
 from app.seed import seed_if_empty
 
 seed_if_empty()
@@ -21,6 +21,7 @@ app.include_router(stores.router, prefix="/api")
 app.include_router(tickets.router, prefix="/api")
 app.include_router(gates.router, prefix="/api")
 app.include_router(quarantine.router, prefix="/api")
+app.include_router(voids.router, prefix="/api")
 app.include_router(settings.router, prefix="/api")
 
 

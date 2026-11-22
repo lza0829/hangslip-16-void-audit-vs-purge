@@ -4,6 +4,7 @@ import Intake from "./pages/Intake.jsx";
 import Process from "./pages/Process.jsx";
 import Ready from "./pages/Ready.jsx";
 import Quarantine from "./pages/Quarantine.jsx";
+import Void from "./pages/Void.jsx";
 import Stores from "./pages/Stores.jsx";
 import Gate from "./pages/Gate.jsx";
 import Settings from "./pages/Settings.jsx";
@@ -14,6 +15,7 @@ const links = [
   ["/工序", "工序轨"],
   ["/待取", "待取核销"],
   ["/隔离", "超期隔离"],
+  ["/废票", "废票留档"],
   ["/门店", "门店衣架"],
   ["/日闸", "结案日闸"],
   ["/设置", "设置"],
@@ -42,6 +44,7 @@ export default function App() {
           <Route path="/工序" element={<Process />} />
           <Route path="/待取" element={<Ready />} />
           <Route path="/隔离" element={<Quarantine />} />
+          <Route path="/废票" element={<Void />} />
           <Route path="/门店" element={<Stores />} />
           <Route path="/日闸" element={<Gate />} />
           <Route path="/设置" element={<Settings />} />

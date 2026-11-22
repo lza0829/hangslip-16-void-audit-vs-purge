@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import date, datetime, timedelta
 
-from app.db import connect, init_db
+from app.db import IN_FLIGHT_NOT_IN, connect, init_db
 
 
 def seed_if_empty() -> None:
@@ -85,7 +85,7 @@ def seed_if_empty() -> None:
         )
         # refresh watermark
         openish = conn.execute(
-            "SELECT COUNT(*) AS c FROM hang_tickets WHERE status NOT IN ('已取','丢失隔离')"
+            f"SELECT COUNT(*) AS c FROM hang_tickets WHERE status NOT IN ({IN_FLIGHT_NOT_IN})"
         ).fetchone()["c"]
         conn.execute(
             "UPDATE watermarks SET value=?, updated_at=? WHERE key='在途票'",
